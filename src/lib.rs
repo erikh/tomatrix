@@ -13,6 +13,7 @@ lazy_static::lazy_static! {
     pub static ref COLORS: [Color; 4] = [DarkGreen, DarkGrey, Green, White];
 }
 
+#[derive(Debug, Clone)]
 pub struct Data {
     position: Position,
     symbol: char,
@@ -22,15 +23,27 @@ pub struct Data {
 }
 
 impl Data {
-    fn iterate(&mut self) {
+    pub fn new(symbol: char, window: Window) -> Self {
+        Self {
+            position: Position(rand::random::<usize>() % window.width, window.height),
+            symbol,
+            speed: rand::random::<usize>() % MAX_SPEED,
+            color: next_color(),
+            volatility: rand::random::<f32>() % 1.0,
+        }
+    }
+
+    pub fn iterate(&mut self) {
         if (rand::random::<f32>() % 1.0) > self.volatility {}
     }
 }
 
-pub type Corpus = Vec<Data>;
+pub type Corpus = Vec<char>;
 
+#[derive(Debug, Clone)]
 pub struct Position(usize, usize);
 
+#[derive(Debug, Clone)]
 pub struct Window {
     buffer: Vec<Data>,
     height: usize,
@@ -52,7 +65,7 @@ impl Window {
     }
 
     pub fn draw_next(&self, corpus: Corpus) -> Result<()> {
-        let data = next_data(corpus);
+        let data = self.next_data(corpus);
         let color = next_color();
 
         std::io::stdout()
@@ -64,10 +77,10 @@ impl Window {
             .execute(Print(&format!("{}", data.symbol)))?;
         Ok(())
     }
-}
 
-fn next_data(corpus: Corpus) -> Data {
-    corpus[rand::random::<usize>() % corpus.len()]
+    fn next_data(&self, corpus: Corpus) -> Data {
+        Data::new(corpus[rand::random::<usize>() % corpus.len()], self.clone())
+    }
 }
 
 fn next_color() -> Color {
