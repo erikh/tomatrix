@@ -56,12 +56,20 @@ impl Data {
         }
     }
 
-    pub fn iterate(&mut self) {
+    pub fn iterate(&mut self) -> bool {
         if (rand::random::<f32>() % 1.0) > self.volatility {
+            if rand::random::<bool>() {
+                self.position.1 -= 1;
+                if self.position.1 == 0 {
+                    return false;
+                }
+            }
             self.speed = pick_speed();
             self.color = pick_color();
             self.volatility = pick_volatility();
         }
+
+        return true;
     }
 }
 
@@ -96,6 +104,8 @@ impl Window {
     }
 
     pub fn draw_next(&mut self) -> Result<()> {
+        let mut newdata = Vec::new();
+
         for item in &mut self.data {
             std::io::stdout()
                 .execute(MoveTo(
@@ -105,8 +115,12 @@ impl Window {
                 .execute(SetForegroundColor(item.color))?
                 .execute(Print(&format!("{}", item.symbol)))?;
 
-            item.iterate();
+            if item.iterate() {
+                newdata.push(item.clone())
+            }
         }
+
+        self.data = newdata;
 
         if std::time::Instant::now() - self.last_data < std::time::Duration::new(1, 0) {
             self.next_data(rand::random::<usize>() % self.width);
