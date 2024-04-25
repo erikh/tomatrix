@@ -72,19 +72,21 @@ pub struct Position(usize, usize);
 
 #[derive(Debug, Clone)]
 pub struct Window {
+    data: Vec<Data>,
     corpus: Corpus,
-    buffer: Vec<Data>,
     height: usize,
     width: usize,
+    last_data: std::time::Instant,
 }
 
 impl Window {
     pub fn new(height: usize, width: usize) -> Result<Self> {
         Ok(Self {
+            data: Vec::new(),
             corpus: get_corpus()?,
             height,
             width,
-            buffer: Vec::with_capacity(height * width),
+            last_data: std::time::Instant::now(),
         })
     }
 
@@ -93,21 +95,31 @@ impl Window {
         Self::new(ws.height.into(), ws.width.into())
     }
 
-    pub fn draw_next(&self) -> Result<()> {
-        let data = self.next_data();
-        let color = pick_color();
+    pub fn draw_next(&mut self) -> Result<()> {
+        for item in &mut self.data {
+            std::io::stdout()
+                .execute(MoveTo(
+                    item.position.0.try_into()?,
+                    item.position.1.try_into()?,
+                ))?
+                .execute(SetForegroundColor(item.color))?
+                .execute(Print(&format!("{}", item.symbol)))?;
 
-        std::io::stdout()
-            .execute(MoveTo(
-                data.position.0.try_into()?,
-                data.position.1.try_into()?,
-            ))?
-            .execute(SetForegroundColor(color))?
-            .execute(Print(&format!("{}", data.symbol)))?;
+            item.iterate();
+        }
+
+        if std::time::Instant::now() - self.last_data < std::time::Duration::new(1, 0) {
+            self.next_data(rand::random::<usize>() % self.width);
+            self.last_data = std::time::Instant::now();
+        }
+
         Ok(())
     }
 
-    fn next_data(&self) -> Data {
-        Data::new(self)
+    fn next_data(&mut self, count: usize) {
+        for _ in 0..count {
+            let data = Data::new(self);
+            self.data.push(data.clone());
+        }
     }
 }
