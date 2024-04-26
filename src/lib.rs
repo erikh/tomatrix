@@ -37,11 +37,11 @@ fn pick_volatility() -> f32 {
 
 fn pick_symbol(corpus: &Corpus) -> char {
     let c = corpus[rand::random::<usize>() % corpus.len()];
-    if rand::random() {
-        return ' ';
+    if rand::random::<u8>() % 10 < 3 {
+        return c;
     }
 
-    c
+    ' '
 }
 
 fn get_corpus() -> Result<Corpus> {
@@ -67,7 +67,7 @@ impl Data {
         if (rand::random::<f32>() % 1.0) > self.volatility {
             if rand::random::<bool>() {
                 self.position.1 += self.speed;
-                if self.position.1 >= (self.height - (rand::random::<usize>() % self.height)) * 2 {
+                if self.position.1 >= self.height - (rand::random::<usize>() % (self.height / 8)) {
                     return false;
                 }
             }
