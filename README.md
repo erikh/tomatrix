@@ -10,6 +10,8 @@ e.g., `cargo run < src/lib.rs`. Play with the character sets to influence the ou
 
 `cargo install tomatrix` to install this.
 
+Press Control+C to exit.
+
 ## Author
 
 The Professional <erik@hollensbe.org>
