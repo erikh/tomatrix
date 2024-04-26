@@ -10,7 +10,13 @@ e.g., `cargo run < src/lib.rs`. Play with the character sets to influence the ou
 
 `cargo install tomatrix` to install this.
 
+This one is fun: `head -c 1000000 /dev/urandom | perl -pe 's/\P{Word}//g' | tomatrix`
+
 Press Control+C to exit.
+
+## Example
+
+<img src="example.png" />
 
 ## Author
 
