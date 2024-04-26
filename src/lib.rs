@@ -36,7 +36,12 @@ fn pick_volatility() -> f32 {
 }
 
 fn pick_symbol(corpus: &Corpus) -> char {
-    corpus[rand::random::<usize>() % corpus.len()]
+    let c = corpus[rand::random::<usize>() % corpus.len()];
+    if rand::random() {
+        return ' ';
+    }
+
+    c
 }
 
 fn get_corpus() -> Result<Corpus> {
@@ -62,7 +67,7 @@ impl Data {
         if (rand::random::<f32>() % 1.0) > self.volatility {
             if rand::random::<bool>() {
                 self.position.1 += self.speed;
-                if self.position.1 > self.height {
+                if self.position.1 >= (self.height - (rand::random::<usize>() % self.height)) * 2 {
                     return false;
                 }
             }
@@ -108,7 +113,7 @@ impl Window {
 
     pub fn from_terminal() -> Result<Self> {
         let ws = crossterm::terminal::size()?;
-        Self::new(((ws.1 - 1) * 2).into(), (ws.0 - 1).into())
+        Self::new((ws.0 - 1).into(), (ws.1 - 1).into())
     }
 
     pub fn draw_next(&mut self) -> Result<()> {
@@ -135,7 +140,7 @@ impl Window {
         self.data = newdata;
 
         if std::time::Instant::now() - self.last_data > std::time::Duration::new(0, 2500000) {
-            self.next_data(rand::random::<usize>() % self.width);
+            self.next_data(rand::random::<usize>() % 5);
             self.last_data = std::time::Instant::now();
         }
 

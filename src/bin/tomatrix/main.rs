@@ -12,6 +12,6 @@ pub fn main() -> Result<()> {
     let mut window = Window::default();
     loop {
         window.draw_next()?;
-        std::thread::sleep(std::time::Duration::new(0, rand::random::<u32>() % 1000000));
+        std::thread::sleep(std::time::Duration::new(0, 1000000));
     }
 }
