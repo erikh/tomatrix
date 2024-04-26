@@ -15,6 +15,7 @@ lazy_static::lazy_static! {
 
 #[derive(Debug, Clone)]
 pub struct Data {
+    height: usize,
     position: Position,
     symbol: char,
     speed: usize,
@@ -48,7 +49,8 @@ fn get_corpus() -> Result<Corpus> {
 impl Data {
     pub fn new(window: &Window) -> Self {
         Self {
-            position: Position(rand::random::<usize>() % window.width, window.height),
+            height: window.height,
+            position: Position(rand::random::<usize>() % window.width, 0),
             symbol: pick_symbol(&window.corpus),
             speed: pick_speed(),
             color: pick_color(),
@@ -59,8 +61,8 @@ impl Data {
     pub fn iterate(&mut self) -> bool {
         if (rand::random::<f32>() % 1.0) > self.volatility {
             if rand::random::<bool>() {
-                self.position.1 -= 1;
-                if self.position.1 == 0 {
+                self.position.1 += self.speed;
+                if self.position.1 > self.height {
                     return false;
                 }
             }
@@ -87,8 +89,14 @@ pub struct Window {
     last_data: std::time::Instant,
 }
 
+impl Default for Window {
+    fn default() -> Self {
+        Window::from_terminal().expect("Could not get terminal settings")
+    }
+}
+
 impl Window {
-    pub fn new(height: usize, width: usize) -> Result<Self> {
+    pub fn new(width: usize, height: usize) -> Result<Self> {
         Ok(Self {
             data: Vec::new(),
             corpus: get_corpus()?,
@@ -99,8 +107,8 @@ impl Window {
     }
 
     pub fn from_terminal() -> Result<Self> {
-        let ws = crossterm::terminal::window_size()?;
-        Self::new(ws.height.into(), ws.width.into())
+        let ws = crossterm::terminal::size()?;
+        Self::new(((ws.1 - 1) * 2).into(), (ws.0 - 1).into())
     }
 
     pub fn draw_next(&mut self) -> Result<()> {
@@ -115,14 +123,18 @@ impl Window {
                 .execute(SetForegroundColor(item.color))?
                 .execute(Print(&format!("{}", item.symbol)))?;
 
-            if item.iterate() {
+            if rand::random() {
+                if item.iterate() {
+                    newdata.push(item.clone())
+                }
+            } else {
                 newdata.push(item.clone())
             }
         }
 
         self.data = newdata;
 
-        if std::time::Instant::now() - self.last_data < std::time::Duration::new(1, 0) {
+        if std::time::Instant::now() - self.last_data > std::time::Duration::new(0, 2500000) {
             self.next_data(rand::random::<usize>() % self.width);
             self.last_data = std::time::Instant::now();
         }
